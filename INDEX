@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doodh Tracker – Dairy Delivery & Billing</title>
+<link rel="stylesheet" href="style.css"></head><body>
+<div class="hero"><div class="in"><div><h1>🥛 <span id="ttl"></span></h1><div class="s" id="sub"></div></div>
+<select id="lg" title="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select></div>
+<svg class="wave" viewBox="0 0 400 30" preserveAspectRatio="none"><path d="M0 18 Q50 0 100 16 T200 16 T300 16 T400 14 V30 H0Z" fill="var(--bg)"/></svg></div>
+<div class="wrap"><div id="alerts"></div><div class="stats" id="stats"></div><nav id="nav"></nav><div id="app"></div></div>
+<div id="pr"></div>
+<script src="script.js"></script></body></html>
