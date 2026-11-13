@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Doodh Tracker – Dairy Delivery & Billing</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--bg:#eef6fb;--card:#fff;--tx:#17313f;--mut:#6a8290;--pri:#1f8ef1;--pri2:#5fc1ff;--ok:#12a150;--bad:#d93a3a;--bd:#dbe8f1;--sh:0 4px 14px rgba(31,142,241,.10)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e161d;--card:#172430;--tx:#e6f1f8;--mut:#8aa3b3;--pri:#4aa8ff;--pri2:#2a6fb0;--ok:#4cd081;--bad:#ff7b7b;--bd:#26394a;--sh:none}}
+:root[data-theme="dark"]{--bg:#0e161d;--card:#172430;--tx:#e6f1f8;--mut:#8aa3b3;--pri:#4aa8ff;--pri2:#2a6fb0;--ok:#4cd081;--bad:#ff7b7b;--bd:#26394a;--sh:none}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 system-ui,-apple-system,"Segoe UI","Noto Sans Devanagari",Roboto,sans-serif}
+.hero{background:linear-gradient(135deg,var(--pri),var(--pri2));color:#fff;padding:16px 14px 46px;position:relative;overflow:hidden}
+.hero .in{max-width:760px;margin:0 auto;display:flex;gap:12px;align-items:center;justify-content:space-between}
+.hero h1{margin:0;font-size:22px}.hero .s{opacity:.9;font-size:13px}
+.hero select{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.5)}.hero option{color:#000}
+.wave{position:absolute;left:0;right:0;bottom:-1px;height:30px}
+.wrap{max-width:760px;margin:-26px auto 0;padding:0 14px 30px;position:relative}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.st{background:var(--card);border-radius:14px;padding:10px;text-align:center;box-shadow:var(--sh);border:1px solid var(--bd)}
+.st b{display:block;font-size:18px}.st span{font-size:11px;color:var(--mut)}
+nav{display:flex;gap:6px;margin-bottom:12px}
+nav button{flex:1;padding:9px 2px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:12px;font-weight:600;cursor:pointer;font-size:13px}
+nav button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--sh)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.sp{justify-content:space-between}
+.av{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:18px;flex:none}
+input,select{padding:8px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;min-width:0}
+input.s{width:78px}
+.btn{padding:8px 12px;border:0;border-radius:10px;background:var(--pri);color:#fff;font-weight:600;cursor:pointer;text-decoration:none;display:inline-block;font-size:14px}
+.btn.g{background:var(--ok)}.btn.o{background:transparent;color:var(--tx);border:1px solid var(--bd)}.btn.r{background:var(--bad)}
+.mut{color:var(--mut);font-size:13px}.ok{color:var(--ok);font-weight:700}.bad{color:var(--bad);font-weight:700}
+.alert{background:#fff4e0;color:#7a4b00;border:1px solid #f0c36d;border-radius:14px;padding:10px;margin-bottom:10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .alert{background:#3a2c10;color:#ffd98a;border-color:#6b5120}}
+.big{font-size:24px;font-weight:800}
+.bar{height:8px;border-radius:6px;background:var(--bd);overflow:hidden;margin:6px 0}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--ok),var(--pri2))}
+.ov{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:5px 6px;border-bottom:1px solid var(--bd);text-align:left}
+pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--bd);border-radius:10px;padding:8px;font:13px/1.4 inherit;margin:8px 0}
+.empty{text-align:center;padding:22px 10px}.empty div{font-size:42px}
+#pr{display:none}
+@media print{body>.hero,body>.wrap{display:none}#pr{display:block;color:#000;background:#fff;padding:20px}#pr table{font-size:14px}}
+</style></head><body>
+<div class="hero"><div class="in"><div><h1>🥛 <span id="ttl"></span></h1><div class="s" id="sub"></div></div>
+<select id="lg" title="Language"><option value="en">English</option><option value="hi">हिन्दी</option><option value="mr">मराठी</option></select></div>
+<svg class="wave" viewBox="0 0 400 30" preserveAspectRatio="none"><path d="M0 18 Q50 0 100 16 T200 16 T300 16 T400 14 V30 H0Z" fill="var(--bg)"/></svg></div>
+<div class="wrap"><div id="alerts"></div><div class="stats" id="stats"></div><nav id="nav"></nav><div id="app"></div></div>
+<div id="pr"></div>
+<script>
+const K='doodh-tracker-v1';
+let S={shop:'Sharma Dairy',remDay:1,lang:'en',cust:[],log:{},rcv:{},pay:[]};
+try{const r=localStorage.getItem(K);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+const save=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+const T={
+en:{ttl:'Doodh Tracker',sub:'Doorstep delivery, receipts and monthly billing',del:'Delivery',bill:'Bill',hist:'History',cust:'Customers',noc:'No customers yet. Add your first customer in the Customers tab.',date:'Date',pend:'Pending',got:'Received',btn:'Delivered & received ✓',undo:'Undo',msg:'Message',L:'litres',due:'Due',paid:'Paid ✓',pay:'Record payment',rec:'₹ paid',det:'Details & message',hide:'Hide',tot:'Total pending for',shop:'Shop name',rd:'Remind from day',save:'Save',nm:'Name',mob:'Mobile (10 digits)',lpd:'L/day',rate:'₹/L',add:'Add',rm:'Remove',all:'Mark all received',print:'Print / PDF',today:'Delivered today',earn:'Billed this month',coll:'Collected',alert:'Payment reminder due',alert2:'customer(s) unpaid for',send:'Send reminders →',copy:'Copy',copied:'Copied ✓',nh:'No payments recorded yet.',ph:'Payment history',cl:'Customer message language',fill:'Please fill name, mobile, litres per day and rate.',ask:'Remove this customer?',days:'days',prt:'Milk bill',cm:'Collection'},
+hi:{ttl:'दूध ट्रैकर',sub:'घर पर डिलीवरी, रसीद और मासिक बिल',del:'डिलीवरी',bill:'बिल',hist:'इतिहास',cust:'ग्राहक',noc:'अभी कोई ग्राहक नहीं। ग्राहक टैब में पहला ग्राहक जोड़ें।',date:'तारीख',pend:'बाकी',got:'मिल गया',btn:'डिलीवर हुआ व मिल गया ✓',undo:'वापस',msg:'संदेश',L:'लीटर',due:'बकाया',paid:'चुकता ✓',pay:'भुगतान दर्ज करें',rec:'₹ जमा',det:'विवरण व संदेश',hide:'छुपाएँ',tot:'कुल बकाया',shop:'दुकान का नाम',rd:'याद दिलाना शुरू (तारीख)',save:'सेव',nm:'नाम',mob:'मोबाइल (10 अंक)',lpd:'लीटर/दिन',rate:'₹/लीटर',add:'जोड़ें',rm:'हटाएँ',all:'सब को मिला मानें',print:'प्रिंट / PDF',today:'आज डिलीवर',earn:'इस माह का बिल',coll:'वसूली',alert:'भुगतान की याद दिलाएँ',alert2:'ग्राहकों का बकाया है',send:'रिमाइंडर भेजें →',copy:'कॉपी',copied:'कॉपी हुआ ✓',nh:'अभी कोई भुगतान दर्ज नहीं।',ph:'भुगतान इतिहास',cl:'ग्राहक के संदेश की भाषा',fill:'कृपया नाम, मोबाइल, लीटर/दिन और रेट भरें।',ask:'इस ग्राहक को हटाएँ?',days:'दिन',prt:'दूध बिल',cm:'वसूली'},
+mr:{ttl:'दूध ट्रॅकर',sub:'दारापर्यंत डिलिव्हरी, पावती आणि मासिक बिल',del:'डिलिव्हरी',bill:'बिल',hist:'इतिहास',cust:'ग्राहक',noc:'अजून ग्राहक नाहीत. ग्राहक टॅबमध्ये पहिला ग्राहक जोडा.',date:'तारीख',pend:'बाकी',got:'मिळाले',btn:'डिलिव्हर झाले व मिळाले ✓',undo:'मागे',msg:'संदेश',L:'लिटर',due:'थकबाकी',paid:'भरले ✓',pay:'पेमेंट नोंदवा',rec:'₹ जमा',det:'तपशील व संदेश',hide:'लपवा',tot:'एकूण थकबाकी',shop:'दुकानाचे नाव',rd:'आठवण सुरू (तारीख)',save:'सेव्ह',nm:'नाव',mob:'मोबाईल (10 अंक)',lpd:'लिटर/दिवस',rate:'₹/लिटर',add:'जोडा',rm:'काढा',all:'सर्वांना मिळाले',print:'प्रिंट / PDF',today:'आज डिलिव्हर',earn:'या महिन्याचे बिल',coll:'वसुली',alert:'पेमेंट आठवण',alert2:'ग्राहकांची थकबाकी आहे',send:'रिमाइंडर पाठवा →',copy:'कॉपी',copied:'कॉपी झाले ✓',nh:'अजून पेमेंट नोंदवलेले नाही.',ph:'पेमेंट इतिहास',cl:'ग्राहकाच्या संदेशाची भाषा',fill:'कृपया नाव, मोबाईल, लिटर/दिवस आणि दर भरा.',ask:'हा ग्राहक काढायचा?',days:'दिवस',prt:'दूध बिल',cm:'वसुली'}};
+const t=k=>T[S.lang][k]||T.en[k];
+const LOC={en:'en-IN',hi:'hi-IN',mr:'mr-IN'};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+let tab='today',date=iso(new Date()),month=iso(new Date()).slice(0,7),msg=null;
+const fmt=n=>'₹'+(Math.round(n*100)/100).toLocaleString('en-IN');
+const nice=(d,l)=>new Date(d+'T00:00').toLocaleDateString(LOC[l||S.lang],{day:'numeric',month:'short',year:'numeric'});
+const mname=(m,l)=>new Date(m+'-01T00:00').toLocaleDateString(LOC[l||S.lang],{month:'long',year:'numeric'});
+const COL=['#1f8ef1','#12a150','#e8833a','#9b5de5','#e5568a','#13a5a5'];
+function stats(c,m){let days=[],L=0;
+ Object.keys(S.log).sort().forEach(d=>{if(d.startsWith(m)&&S.rcv[d]&&S.rcv[d][c.id]&&S.log[d][c.id]>0){days.push([d,S.log[d][c.id]]);L+=S.log[d][c.id]}});
+ const amt=L*c.rate,paid=S.pay.filter(p=>p.c===c.id&&p.m===m).reduce((a,p)=>a+p.a,0);
+ return{days,L,amt,paid,bal:amt-paid}}
+function prevMonth(){const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-1);return iso(d).slice(0,7)}
+function links(c,text){const p=c.phone.replace(/\D/g,'');const w='https://wa.me/'+(p.length===10?'91'+p:p)+'?text='+encodeURIComponent(text);
+ return `<a class="btn g" target="_blank" rel="noopener" href="${w}">WhatsApp</a> <a class="btn" href="sms:${p}?body=${encodeURIComponent(text)}">SMS</a> <button class="btn o" onclick="cp(this)" data-t="${esc(text).replace(/\n/g,'&#10;')}">${t('copy')}</button>`}
+function cp(b){try{navigator.clipboard.writeText(b.getAttribute('data-t'));b.textContent=t('copied')}catch(e){}}
+function dayMsg(c,d){const q=S.log[d][c.id],s=stats(c,d.slice(0,7)),l=c.lang||'en',n=nice(d,l),f=`${s.L} L × ${fmt(c.rate)} = ${fmt(s.amt)}`;
+ if(l==='hi')return `नमस्ते ${c.name} 🙏\n🥛 आपका दूध (${q} L) ${n} को आपके दरवाज़े पर पहुँचा दिया गया है और आपको मिल गया है।\nइस महीने अब तक: ${f}\n– ${S.shop}`;
+ if(l==='mr')return `नमस्कार ${c.name} 🙏\n🥛 तुमचे दूध (${q} L) ${n} रोजी तुमच्या दारापर्यंत पोहोचवले असून तुम्हाला मिळाले आहे.\nया महिन्यात आतापर्यंत: ${f}\n– ${S.shop}`;
+ return `Namaste ${c.name} 🙏\n🥛 Your milk (${q} L) has been delivered at your doorstep on ${n} and received by you.\nThis month so far: ${f}\n– ${S.shop}`}
+function billMsg(c,m){const s=stats(c,m),l=c.lang||'en',ds=s.days.map(x=>+x[0].slice(8)+': '+x[1]).join(', ')||'-',mn=mname(m,l),f=`${s.L} L × ${fmt(c.rate)} = ${fmt(s.amt)}`;
+ if(l==='hi')return `नमस्ते ${c.name} 🙏\n${S.shop} – ${mn} का दूध बिल\n\nडिलीवरी (तारीख: लीटर):\n${ds}\n\nकुल दिन: ${s.days.length}\nकुल दूध: ${f}\nजमा: ${fmt(s.paid)}\n✅ देय अंतिम राशि: ${fmt(s.bal)}\n\nकृपया जल्द भुगतान करें। धन्यवाद!`;
+ if(l==='mr')return `नमस्कार ${c.name} 🙏\n${S.shop} – ${mn} चे दूध बिल\n\nडिलिव्हरी (तारीख: लिटर):\n${ds}\n\nएकूण दिवस: ${s.days.length}\nएकूण दूध: ${f}\nभरलेले: ${fmt(s.paid)}\n✅ भरावयाची अंतिम रक्कम: ${fmt(s.bal)}\n\nकृपया लवकर पैसे द्या. धन्यवाद!`;
+ return `Namaste ${c.name} 🙏\n${S.shop} – Milk bill for ${mn}\n\nDelivered (date: litres):\n${ds}\n\nTotal days: ${s.days.length}\nTotal milk: ${f}\nPaid: ${fmt(s.paid)}\n✅ FINAL AMOUNT TO PAY: ${fmt(s.bal)}\n\nKindly pay at your earliest convenience. Thank you!`}
+function lsel(id,v){return `<select id="${id}"><option value="en"${v==='en'?' selected':''}>English</option><option value="hi"${v==='hi'?' selected':''}>हिन्दी</option><option value="mr"${v==='mr'?' selected':''}>मराठी</option></select>`}
+function head(){
+ $('#ttl').textContent=t('ttl');$('#sub').textContent=t('sub');$('#lg').value=S.lang;document.documentElement.lang=S.lang;
+ $('#nav').innerHTML=[['today','🚚',t('del')],['bill','🧾',t('bill')],['hist','📒',t('hist')],['cust','👥',t('cust')]].map(x=>`<button class="${tab===x[0]?'on':''}" onclick="go('${x[0]}')">${x[1]} ${x[2]}</button>`).join('');
+ const L=S.log[iso(new Date())]||{},R=S.rcv[iso(new Date())]||{},mm=iso(new Date()).slice(0,7);
+ const td=S.cust.reduce((a,c)=>a+(R[c.id]?(L[c.id]||0):0),0);let am=0,pd=0;S.cust.forEach(c=>{const s=stats(c,mm);am+=s.amt;pd+=s.paid});
+ $('#stats').innerHTML=`<div class="st"><b>🥛 ${td} L</b><span>${t('today')}</span></div><div class="st"><b>${fmt(am)}</b><span>${t('earn')}</span></div><div class="st"><b>${fmt(pd)}</b><span>${t('coll')}</span></div>`;
+ let h='';const pm=prevMonth();
+ if(new Date().getDate()>=S.remDay){const due=S.cust.filter(c=>stats(c,pm).bal>0.5);
+  if(due.length)h=`<div class="alert">🔔 <b>${t('alert')}:</b> ${due.length} ${t('alert2')} ${mname(pm)} (${fmt(due.reduce((a,c)=>a+stats(c,pm).bal,0))}). <a href="#" onclick="go('bill',event,'${pm}')">${t('send')}</a></div>`}
+ $('#alerts').innerHTML=h}
+function go(x,e,m){if(e)e.preventDefault();tab=x;if(m)month=m;msg=null;render()}
+function render(){head();$('#app').innerHTML=tab==='today'?vToday():tab==='bill'?vBill():tab==='hist'?vHist():vCust()}
+const av=c=>`<div class="av" style="background:${COL[c.id%COL.length]}">${esc(c.name.trim()[0]||'?').toUpperCase()}</div>`;
+const none=()=>`<div class="card empty"><div>🐄</div>${t('noc')}</div>`;
+function vToday(){
+ if(!S.cust.length)return none();
+ const L=S.log[date]||{},R=S.rcv[date]||{},n=S.cust.filter(c=>R[c.id]).length,pc=Math.round(100*n/S.cust.length);
+ let h=`<div class="card"><div class="row sp"><b>${t('date')}</b><input type="date" value="${date}" onchange="date=this.value;msg=null;render()"></div>
+ <div class="bar"><i style="width:${pc}%"></i></div><div class="row sp"><span class="mut">${n}/${S.cust.length} ${t('got')}</span><button class="btn o" onclick="allR()">${t('all')}</button></div></div>`;
+ S.cust.forEach(c=>{const q=L[c.id]!==undefined?L[c.id]:c.qty,got=R[c.id];
+  h+=`<div class="card"><div class="row sp"><div class="row">${av(c)}<div><b>${esc(c.name)}</b><div class="mut">${esc(c.phone)} · ${fmt(c.rate)}/L</div></div></div>
+  <span class="${got?'ok':'mut'}">${got?'✓ '+t('got'):t('pend')}</span></div>
+  <div class="row" style="margin-top:8px"><input class="s" type="number" step="0.25" min="0" value="${q}" ${got?'disabled':''} onchange="setQ(${c.id},this.value)"><span class="mut">${t('L')}</span>
+  ${got?`<button class="btn o" onclick="undo(${c.id})">${t('undo')}</button><button class="btn" onclick="showMsg(${c.id})">${t('msg')}</button>`:`<button class="btn g" onclick="recv(${c.id})">${t('btn')}</button>`}</div>
+  ${msg===c.id&&got?`<pre>${esc(dayMsg(c,date))}</pre>${links(c,dayMsg(c,date))}`:''}</div>`});
+ return h}
+function setQ(id,v){(S.log[date]=S.log[date]||{})[id]=Math.max(0,parseFloat(v)||0);save()}
+function mark(id){const c=S.cust.find(x=>x.id===id);S.log[date]=S.log[date]||{};if(S.log[date][id]===undefined)S.log[date][id]=c.qty;(S.rcv[date]=S.rcv[date]||{})[id]=true}
+function recv(id){mark(id);msg=id;save();render()}
+function allR(){S.cust.forEach(c=>mark(c.id));save();render()}
+function undo(id){delete S.rcv[date][id];msg=null;save();render()}
+function showMsg(id){msg=id;render()}
+function vBill(){
+ let h=`<div class="card row sp"><b>${mname(month)}</b><input type="month" value="${month}" onchange="month=this.value;render()"></div>`;
+ if(!S.cust.length)return h+none();
+ let tot=0;S.cust.forEach(c=>{const s=stats(c,month);tot+=s.bal;
+  h+=`<div class="card"><div class="row sp"><div class="row">${av(c)}<b>${esc(c.name)}</b></div><span class="${s.bal>0.5?'bad':'ok'}">${s.bal>0.5?t('due')+' '+fmt(s.bal):t('paid')}</span></div>
+  <div class="mut" style="margin-top:6px">${s.days.length} ${t('days')} · ${s.L} L × ${fmt(c.rate)} = <b>${fmt(s.amt)}</b> · ${t('paid').replace(' ✓','')} ${fmt(s.paid)}</div>
+  <div class="row" style="margin-top:8px"><button class="btn o" onclick="tg(${c.id})">${msg==='b'+c.id?t('hide'):t('det')}</button>
+  ${s.bal>0.5?`<input class="s" id="p${c.id}" type="number" value="${s.bal}"><button class="btn g" onclick="pay(${c.id})">${t('pay')}</button>`:''}</div>
+  ${msg==='b'+c.id?`<div class="ov"><table><tr><th>${t('date')}</th><th>${t('L')}</th><th>₹</th></tr>${s.days.map(x=>`<tr><td>${nice(x[0])}</td><td>${x[1]}</td><td>${fmt(x[1]*c.rate)}</td></tr>`).join('')}</table></div>
+  <pre>${esc(billMsg(c,month))}</pre>${links(c,billMsg(c,month))} <button class="btn o" onclick="prt(${c.id})">🖨 ${t('print')}</button>`:''}</div>`});
+ return `<div class="card"><div class="mut">${t('tot')} ${mname(month)}</div><div class="big">${fmt(tot)}</div></div>`+h}
+function tg(id){msg=msg==='b'+id?null:'b'+id;render()}
+function pay(id){const a=parseFloat($('#p'+id).value);if(!(a>0))return;S.pay.push({c:id,m:month,a,d:iso(new Date())});save();render()}
+function prt(id){const c=S.cust.find(x=>x.id===id),s=stats(c,month);
+ $('#pr').innerHTML=`<h2>🥛 ${esc(S.shop)}</h2><h3>${t('prt')} – ${mname(month)}</h3><p><b>${esc(c.name)}</b> · ${esc(c.phone)}</p><table border="1" cellspacing="0" cellpadding="6" style="border-collapse:collapse;width:100%"><tr><th>${t('date')}</th><th>${t('L')}</th><th>₹</th></tr>${s.days.map(x=>`<tr><td>${nice(x[0])}</td><td>${x[1]}</td><td>${fmt(x[1]*c.rate)}</td></tr>`).join('')}</table><p>${s.L} L × ${fmt(c.rate)} = ${fmt(s.amt)}<br>${t('paid').replace(' ✓','')}: ${fmt(s.paid)}</p><h2>${t('due')}: ${fmt(s.bal)}</h2>`;
+ try{window.print()}catch(e){}}
+function vHist(){
+ const p=S.pay.slice().reverse();if(!p.length)return `<div class="card empty"><div>📒</div>${t('nh')}</div>`;
+ return `<div class="card"><b>${t('ph')}</b><div class="ov"><table>${p.map(x=>{const c=S.cust.find(k=>k.id===x.c);return `<tr><td>${x.d?nice(x.d):''}</td><td>${esc(c?c.name:'?')}</td><td>${mname(x.m)}</td><td class="ok">${fmt(x.a)}</td></tr>`}).join('')}</table></div></div>`}
+function vCust(){
+ let h=`<div class="card"><b>⚙️ ${t('shop')}</b><div class="row" style="margin-top:8px"><input id="sn" value="${esc(S.shop)}"><span class="mut">${t('rd')}</span><input class="s" id="rd" type="number" min="1" max="28" value="${S.remDay}"><button class="btn" onclick="saveSet()">${t('save')}</button></div></div>
+ <div class="card"><b>➕ ${t('add')}</b><div class="row" style="margin-top:8px"><input id="cn" placeholder="${t('nm')}"><input id="cph" placeholder="${t('mob')}" inputmode="tel"><input class="s" id="cq" type="number" step="0.25" placeholder="${t('lpd')}"><input class="s" id="cr" type="number" placeholder="${t('rate')}">${lsel('cl','en')}<button class="btn" onclick="addC()">${t('add')}</button></div><div class="mut" style="margin-top:4px">${t('cl')}</div></div>`;
+ S.cust.forEach(c=>h+=`<div class="card row sp"><div class="row">${av(c)}<div><b>${esc(c.name)}</b><div class="mut">${esc(c.phone)} · ${c.qty} L · ${fmt(c.rate)}/L</div></div></div><div class="row"><select onchange="setL(${c.id},this.value)">${['en','hi','mr'].map(l=>`<option value="${l}"${(c.lang||'en')===l?' selected':''}>${{en:'EN',hi:'हि',mr:'मर'}[l]}</option>`).join('')}</select><button class="btn r" onclick="delC(${c.id})">${t('rm')}</button></div></div>`);
+ return h}
+function setL(id,v){S.cust.find(c=>c.id===id).lang=v;save()}
+function saveSet(){S.shop=$('#sn').value||S.shop;S.remDay=Math.min(28,Math.max(1,+$('#rd').value||1));save();render()}
+function addC(){const n=$('#cn').value.trim(),p=$('#cph').value.trim(),q=parseFloat($('#cq').value),r=parseFloat($('#cr').value);
+ if(!n||!p||!(q>0)||!(r>0)){alert(t('fill'));return}
+ S.cust.push({id:Date.now(),name:n,phone:p,qty:q,rate:r,lang:$('#cl').value});save();render()}
+function delC(id){if(confirm(t('ask'))){S.cust=S.cust.filter(c=>c.id!==id);save();render()}}
+$('#lg').onchange=e=>{S.lang=e.target.value;save();render()};
+render();
+</script></body></html>
